@@ -23,6 +23,8 @@ cp server/.env.example server/.env
 
 The root `npm run dev` uses `concurrently` to start both servers together. To run individually: `npm run dev:client` or `npm run dev:server`.
 
+There are no tests in this project.
+
 ## Architecture
 
 Full-stack treasure hunt game: React + Vite + TypeScript frontend, Express + libsql (SQLite) backend.
@@ -53,7 +55,7 @@ All game state and logic lives here.
 
 - `src/context/AuthContext.tsx` — `AuthProvider` wraps the app; provides `currentUser`, `isGuest`, `isLoading`, `signIn`, `signUp`, `signOut`, `playAsGuest` via `useAuth()` hook; JWT stored in `localStorage` as `authToken`; token is validated via `GET /api/auth/me` on load and cleared on 401
 - `src/components/AuthScreen.tsx` — login/signup UI; shown when `showAuth` is true in `main.tsx`
-- `src/lib/api.ts` — all fetch calls; reads `authToken` from localStorage and attaches as `Authorization: Bearer`; `API_BASE` comes from `VITE_API_URL` env var (empty string in dev, proxied through Vite or set explicitly)
+- `src/lib/api.ts` — all fetch calls; reads `authToken` from localStorage and attaches as `Authorization: Bearer`; `API_BASE` comes from `VITE_API_URL` env var (empty string in dev — Vite proxies `/api` → `http://localhost:3001`)
 
 **Path alias:** `@/` maps to `src/`.
 
@@ -61,7 +63,7 @@ All game state and logic lives here.
 
 ### Backend (`server/src/`)
 
-- `index.ts` — Express entry; configures CORS (`ALLOWED_ORIGINS` env var, defaults to `http://localhost:3000`), mounts `/api/auth` and `/api/scores`
+- `index.ts` — Express entry; runs via `tsx watch` (no compile step); configures CORS (`ALLOWED_ORIGINS` env var, defaults to `http://localhost:3000`), mounts `/api/auth` and `/api/scores`
 - `db.ts` — creates libsql client; uses Turso cloud DB if `TURSO_URL` env var is set, otherwise local file at `server/data/game.db`; initializes `users` and `scores` tables
 - `routes/auth.ts` — `POST /signup` (bcrypt hash, returns JWT), `POST /signin` (verify hash, returns JWT), `GET /me` (requires auth middleware)
 - `routes/scores.ts` — `POST /scores` (requires auth); saves `score`, `result` (`win`|`tie`|`loss`) linked to `userId`
